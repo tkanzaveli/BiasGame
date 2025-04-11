@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bias RX: The AI Diagnosis Challenge</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+<div id="app" class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Bias RX: The AI Diagnosis Challenge</h1>
+
+    <div class="bg-white p-4 rounded-lg shadow mb-4">
+        <h2 class="text-xl font-semibold mb-2">Patient Profile</h2>
+        <p><strong>Symptoms:</strong> {{ patient.symptoms }}</p>
+        <p><strong>Socioeconomic Status:</strong> {{ patient.status }}</p>
+        <p><strong>Demographic:</strong> {{ patient.demographic }}</p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow mb-4">
+        <h2 class="text-xl font-semibold mb-2">AI Recommendation</h2>
+        <p>{{ recommendation }}</p>
+    </div>
+
+    <div class="mb-4">
+        <button @click="checkBias(true)" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Flag as Bias</button>
+        <button @click="checkBias(false)" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded ml-2">Accept as Fair</button>
+    </div>
+
+    <div v-if="feedback" class="p-4 rounded-lg shadow" :class="feedbackColor">
+        <p>{{ feedback }}</p>
+        <button @click="nextPatient" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Next Patient</button>
+    </div>
+
+    <div class="mt-4 text-lg font-semibold">
+        Score: {{ score }}
+    </div>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+
+const patients = [
+    { symptoms: "Chest Pain", status: "High Income", demographic: "White Male", recommendation: "Advanced cardiac MRI" },
+    { symptoms: "Chest Pain", status: "Low Income", demographic: "Black Female", recommendation: "Standard ECG" },
+    { symptoms: "Persistent Headache", status: "High Income", demographic: "Asian Female", recommendation: "MRI Scan" },
+    { symptoms: "Persistent Headache", status: "Low Income", demographic: "Hispanic Male", recommendation: "Painkillers and Rest" }
+];
+
+createApp({
+    setup() {
+        const index = ref(0);
+        const score = ref(0);
+        const feedback = ref(null);
+        const feedbackColor = ref('');
+
+        const patient = ref(patients[index.value]);
+        const recommendation = ref(patient.value.recommendation);
+
+        const checkBias = (flagged) => {
+            const biased = patient.value.status === "Low Income" && patient.value.recommendation.includes("Standard") || patient.value.recommendation.includes("Painkillers");
+            if (flagged === biased) {
+                feedback.value = "Correct! You identified the bias correctly.";
+                feedbackColor.value = 'bg-green-200';
+                score.value += 10;
+            } else {
+                feedback.value = "Incorrect. Review carefully.";
+                feedbackColor.value = 'bg-red-200';
+            }
+        };
+
+        const nextPatient = () => {
+            feedback.value = null;
+            index.value = (index.value + 1) % patients.length;
+            patient.value = patients[index.value];
+            recommendation.value = patient.value.recommendation;
+        };
+
+        return { patient, recommendation, checkBias, nextPatient, feedback, feedbackColor, score };
+    }
+}).mount('#app');
+</script>
+
+</body>
+</html>
